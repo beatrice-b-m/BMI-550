@@ -70,7 +70,7 @@ def get_metrics():
     recall = tp/(tp+fn)
     precision = tp/(tp+fp)
     f1 = (2*recall*precision)/(recall+precision+1e-8)
-    # print('Recall: ',recall,'\nPrecision:',precision,'\nF1-Score:',f1)
+    print('Recall: ',recall,'\nPrecision:',precision,'\nF1-Score:',f1)
     # print('{}\t{}\t{}'.format(precision, recall, f1))
     return f1
 

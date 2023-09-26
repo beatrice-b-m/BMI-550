@@ -4,6 +4,7 @@ from RuleLabeler.negation import NegationChecker, sliding_window_generator
 from RuleLabeler.lexicon import Lexicon
 import re
 import pandas as pd
+import nltk
 
 class Labeler:
     def __init__(self, base_lexicon_path, annotation_dir, TF_IDF_THRESH: float = 0.8):
@@ -134,8 +135,8 @@ class Labeler:
                 punctuation_str="][)(,'‘’:;%“”",
                 replace_list=['-', '/', '\n']
             )
-            # split on whitespace
-            split_s = re.split(r'\s+', out_s)
+            # tokenize string
+            split_s = nltk.tokenize.word_tokenize(out_s)
 
             # drop empty strings
             split_s = [s for s in split_s if s]
