@@ -38,8 +38,8 @@ def load_labels(f_path):
                 labeled_dict[id_].append(cui + '-' + str(neg_flag))
     return labeled_dict
 
-def get_metrics():
-    infile = 'Assignment1GoldStandardSet.xlsx'
+def get_metrics(infile):
+    # infile = 'Assignment1GoldStandardSet.xlsx'
     outfile = 'predicted_symptoms.csv' 
     #infile = 's10_annotated.xlsx'
     #outfile = 's10_annotated_result.xlsx'

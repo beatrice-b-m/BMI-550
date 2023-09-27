@@ -4,4 +4,6 @@ hw_3/content/scientificpub3
 assignment_1/COVID-Twitter-Symptom-Lexicon.txt
 assignment_1/Assignment1GoldStandardSet.xlsx
 assignment_1/annotations/*
+assignment_1/train_annotations.csv
+!assignment_1/annotations/*.xlsx
 

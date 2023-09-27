@@ -12,6 +12,7 @@ class Labeler:
         self.lexicon.preprocess_tokens(self._preprocess)
         self.lexicon.refine_tokens(TF_IDF_THRESH)
         self.negation_check = NegationChecker(self._preprocess)
+        self.predictions = None
 
     def evaluate_dataframe(self, df, save_out: bool = False, LEVENSHTEIN_THRESH: float = 0.9):
         eval_list = []
@@ -27,8 +28,14 @@ class Labeler:
             true_negation_list = [s for s in re.split(r'\${2,}', data["Negation Flag"]) if s]
 
             predictions = list(self.evaluate_text(test_text, THRESH=LEVENSHTEIN_THRESH))
+            self.predictions = predictions
             true_cui_list = [f"{c}-{n}" for c, n in zip(true_cui_list, true_negation_list)]
             predicted_cui_list = [f"{x.cui}-{int(x.negated)}" for x in predictions]
+
+            # print('\n\n', data.ID)
+            # print(test_text)
+            # print("\ntruth:", set(true_cui_list))
+            # print("prediction:", set(predicted_cui_list))
 
             # get metrics
             true = set(true_cui_list)
