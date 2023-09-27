@@ -14,23 +14,27 @@ class Labeler:
         self.negation_check = NegationChecker(self._preprocess)
         self.predictions = None
 
-    def evaluate_dataframe(self, df, save_out: bool = False, LEVENSHTEIN_THRESH: float = 0.9):
+    def evaluate_dataframe(self, df, save_out: bool = False, LEVENSHTEIN_THRESH: float = 0.9, infer_only: bool = False):
         eval_list = []
 
         if save_out:
             out_df = df.copy()
             out_df["Symptom CUIs"] = ""
             out_df["Negation Flag"] = ""
+            out_df["Symptom Expressions"] = ""
+            out_df["Standard Symptom"] = ""
 
         for i, data in df.iterrows():
             test_text = data["TEXT"]
-            true_cui_list = [s for s in re.split(r'\${2,}', data["Symptom CUIs"]) if s]
-            true_negation_list = [s for s in re.split(r'\${2,}', data["Negation Flag"]) if s]
+            if not infer_only:
+                true_cui_list = [s for s in re.split(r'\${2,}', data["Symptom CUIs"]) if s]
+                true_negation_list = [s for s in re.split(r'\${2,}', data["Negation Flag"]) if s]
 
             predictions = list(self.evaluate_text(test_text, THRESH=LEVENSHTEIN_THRESH))
             self.predictions = predictions
-            true_cui_list = [f"{c}-{n}" for c, n in zip(true_cui_list, true_negation_list)]
-            predicted_cui_list = [f"{x.cui}-{int(x.negated)}" for x in predictions]
+            if not infer_only:
+                true_cui_list = [f"{c}-{n}" for c, n in zip(true_cui_list, true_negation_list)]
+                predicted_cui_list = [f"{x.cui}-{int(x.negated)}" for x in predictions]
 
             # print('\n\n', data.ID)
             # print(test_text)
@@ -38,26 +42,33 @@ class Labeler:
             # print("prediction:", set(predicted_cui_list))
 
             # get metrics
-            true = set(true_cui_list)
-            pred = set(predicted_cui_list)
-            true_pos = true.intersection(pred)
-            false_pos = pred.difference(true)
-            false_neg = true.difference(pred)
-            f1 = f1_score(true_pos, false_pos, false_neg)
-            eval_list.append(f1)
+            if not infer_only:
+                true = set(true_cui_list)
+                pred = set(predicted_cui_list)
+                true_pos = true.intersection(pred)
+                false_pos = pred.difference(true)
+                false_neg = true.difference(pred)
+                f1 = f1_score(true_pos, false_pos, false_neg)
+                eval_list.append(f1)
 
             if save_out:
                 # get predicted cuis and negations
                 cui_list = [x.cui for x in predictions]
                 neg_list = [str(int(x.negated)) for x in predictions]
+                window_list = [x.flagged_window for x in predictions]
+                symptom_list = [self.lexicon.symptom_dict[x.cui].name for x in predictions]
 
                 # format output strings
                 cui_str = f"$$${'$$$'.join(cui_list)}$$$"
                 neg_str = f"$$${'$$$'.join(neg_list)}$$$"
+                window_str = f"$$${'$$$'.join(window_list)}$$$"
+                symptom_str = f"$$${'$$$'.join(symptom_list)}$$$"
 
                 # save values to dataframe
                 out_df.at[i, "Symptom CUIs"] = cui_str
                 out_df.at[i, "Negation Flag"] = neg_str
+                out_df.at[i, "Symptom Expressions"] = window_str
+                out_df.at[i, "Standard Symptom"] = symptom_str
 
             # print('f1 score:', f1)
 
@@ -67,7 +78,7 @@ class Labeler:
         # print('total f1 score:', sum(eval_list)/len(eval_list))
 
     def evaluate_text(self, text, THRESH: float = 0.8):
-        text_tokens = self._preprocess([text])[0]
+        text_tokens = self._preprocess([str(text)])[0]
         # print(text_tokens)
 
         # we'll use sets to track our findings so we don't have to
